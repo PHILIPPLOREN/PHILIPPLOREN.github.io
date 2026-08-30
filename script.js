@@ -2,8 +2,8 @@
 const tg = window.Telegram?.WebApp;
 
 if (tg) {
-    tg.expand(); // Разворачиваем приложение на весь экран
-    tg.ready();  // Сообщаем Telegram, что приложение готово
+    tg.expand();
+    tg.ready();
 }
 
 // Получаем элементы
@@ -12,60 +12,97 @@ const titleInput = document.getElementById('title');
 const sourceInput = document.getElementById('source');
 const descriptionInput = document.getElementById('description');
 const resultDiv = document.getElementById('result');
-const cardDiv = document.getElementById('card');
+const formattedTextDiv = document.getElementById('formattedText');
 const copyBtn = document.getElementById('copyBtn');
+const copyPlainBtn = document.getElementById('copyPlainBtn');
 
-// Функция создания карточки
-function createCard(title, source, description) {
+// Функция генерации форматированного текста
+function generateFormattedText(title, source, description) {
     // Экранируем HTML для безопасности
     const escapeHtml = (str) => {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
     };
-
+    
     const safeTitle = escapeHtml(title);
     const safeSource = escapeHtml(source);
     const safeDescription = escapeHtml(description);
+    
+    // Формируем HTML по шаблону
+    let html = `<b>${safeTitle}</b>`;
+    
+    // Добавляем источник только если он указан
+    if (source && source.trim() !== '') {
+        html += `<i>Источник: ${safeSource}</i>`;
+    }
+    
+    html += `\n\n<blockquote>${safeDescription}</blockquote>\n\n`;
+    html += `<b>// <a href="t.me/RumorsGI">@RumorsGI</a> //</b>`;
+    
+    return html;
+}
 
-    return `
-        <div class="card-title">${safeTitle}</div>
-        <div class="card-source">📌 Источник: ${safeSource}</div>
-        <div class="card-description">${safeDescription}</div>
-    `;
+// Функция получения чистого текста (без HTML тегов)
+function getPlainText(title, source, description) {
+    let text = title;
+    
+    if (source && source.trim() !== '') {
+        text += `Источник: ${source}`;
+    }
+    
+    text += `\n\n${description}\n\n`;
+    text += `// @RumorsGI //`;
+    
+    return text;
 }
 
 // Обработчик отправки формы
-form.addEventListener('submit', function (e) {
+form.addEventListener('submit', function(e) {
     e.preventDefault();
-
+    
     const title = titleInput.value.trim();
     const source = sourceInput.value.trim();
     const description = descriptionInput.value.trim();
-
+    
     // Валидация
-    if (!title || !source || !description) {
+    if (!title) {
         if (tg) {
-            tg.showAlert('Пожалуйста, заполните все поля!');
+            tg.showAlert('Пожалуйста, укажите заголовок!');
         } else {
-            alert('Пожалуйста, заполните все поля!');
+            alert('Пожалуйста, укажите заголовок!');
         }
         return;
     }
-
-    // Создаем карточку
-    cardDiv.innerHTML = createCard(title, source, description);
-    resultDiv.classList.remove('hidden');
-
-    // Отправляем данные в Telegram бот (если нужно)
-    if (tg) {
-        tg.sendData(JSON.stringify({
-            title: title,
-            source: source,
-            description: description
-        }));
+    
+    if (!description) {
+        if (tg) {
+            tg.showAlert('Пожалуйста, укажите описание!');
+        } else {
+            alert('Пожалуйста, укажите описание!');
+        }
+        return;
     }
-
+    
+    // Генерируем форматированный текст
+    const formattedHtml = generateFormattedText(title, source, description);
+    formattedTextDiv.innerHTML = formattedHtml;
+    resultDiv.classList.remove('hidden');
+    
+    // Сохраняем данные для отправки
+    const data = {
+        title: title,
+        source: source || null,
+        description: description,
+        formatted: formattedHtml,
+        plain: getPlainText(title, source, description)
+    };
+    
+    // Отправляем данные в бот
+    if (tg) {
+        tg.sendData(JSON.stringify(data));
+    }
+    
     // Показываем уведомление
     if (tg) {
         tg.showPopup({
@@ -76,28 +113,36 @@ form.addEventListener('submit', function (e) {
     }
 });
 
-// Копирование карточки в буфер обмена
-copyBtn.addEventListener('click', function () {
-    const cardText = cardDiv.textContent.trim();
-
+// Копирование HTML
+copyBtn.addEventListener('click', function() {
+    const htmlContent = formattedTextDiv.innerHTML;
+    
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(cardText)
-            .then(() => {
-                if (tg) {
-                    tg.showAlert('📋 Карточка скопирована!');
-                } else {
-                    alert('📋 Карточка скопирована!');
-                }
-            })
-            .catch(() => {
-                fallbackCopy(cardText);
-            });
+        navigator.clipboard.writeText(htmlContent)
+            .then(() => showNotification('✅ HTML скопирован!'))
+            .catch(() => fallbackCopy(htmlContent));
     } else {
-        fallbackCopy(cardText);
+        fallbackCopy(htmlContent);
     }
 });
 
-// Резервный способ копирования
+// Копирование plain text
+copyPlainBtn.addEventListener('click', function() {
+    const title = titleInput.value.trim();
+    const source = sourceInput.value.trim();
+    const description = descriptionInput.value.trim();
+    const plainText = getPlainText(title, source, description);
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(plainText)
+            .then(() => showNotification('✅ Текст скопирован!'))
+            .catch(() => fallbackCopy(plainText));
+    } else {
+        fallbackCopy(plainText);
+    }
+});
+
+// Резервное копирование
 function fallbackCopy(text) {
     const textarea = document.createElement('textarea');
     textarea.value = text;
@@ -105,28 +150,29 @@ function fallbackCopy(text) {
     textarea.style.opacity = '0';
     document.body.appendChild(textarea);
     textarea.select();
-
+    
     try {
         document.execCommand('copy');
-        if (tg) {
-            tg.showAlert('📋 Карточка скопирована!');
-        } else {
-            alert('📋 Карточка скопирована!');
-        }
+        showNotification('✅ Скопировано!');
     } catch (err) {
-        if (tg) {
-            tg.showAlert('Не удалось скопировать');
-        } else {
-            alert('Не удалось скопировать');
-        }
+        showNotification('❌ Не удалось скопировать');
     }
-
+    
     document.body.removeChild(textarea);
 }
 
-// Обработка данных от бота (если нужно)
+// Уведомления
+function showNotification(message) {
+    if (tg) {
+        tg.showAlert(message);
+    } else {
+        alert(message);
+    }
+}
+
+// Обработка данных от бота
 if (tg) {
-    tg.onEvent('mainButtonClicked', function () {
-        // Обработка нажатия главной кнопки
+    tg.onEvent('mainButtonClicked', function() {
+        // Действие при нажатии главной кнопки
     });
 }
