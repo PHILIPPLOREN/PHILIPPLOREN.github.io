@@ -34,7 +34,7 @@ function generateFormattedText(title, source, description) {
     
     // Добавляем источник только если он указан
     if (source && source.trim() !== '') {
-        html += `<i>Источник: ${safeSource}</i>`;
+        html += `\n<i>Источник: ${safeSource}</i>`;
     }
     
     html += `\n\n<blockquote>${safeDescription}</blockquote>\n\n`;
