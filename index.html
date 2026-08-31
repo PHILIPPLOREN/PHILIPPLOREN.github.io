@@ -4,12 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
     <title>WuWa Post Formatter</title>
+
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js?63"></script>
+
     <style>
-        * {
-            box-sizing: border-box
+        :root {
+            color-scheme: dark;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
         }
 
         body {
@@ -17,38 +26,49 @@
             min-height: 100vh;
             background: #111214;
             color: #e8e8ea;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
         }
 
         .app {
             width: min(1100px, calc(100% - 32px));
-            margin: 32px auto
+            margin: 32px auto;
         }
 
         h1 {
             margin: 0 0 20px;
-            font-size: 26px
+            font-size: 26px;
         }
 
         .layout {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 16px;
         }
 
         .panel {
             background: #191a1e;
             border: 1px solid #292b31;
             border-radius: 12px;
-            padding: 18px
+            padding: 18px;
         }
 
         .field {
-            margin-bottom: 14px
+            margin-bottom: 14px;
         }
 
         .field:last-child {
-            margin-bottom: 0
+            margin-bottom: 0;
         }
 
         label {
@@ -56,7 +76,7 @@
             margin-bottom: 7px;
             color: #a8a9af;
             font-size: 13px;
-            font-weight: 600
+            font-weight: 600;
         }
 
         input,
@@ -67,46 +87,46 @@
             outline: none;
             background: #111216;
             color: #eee;
-            font: inherit;
-            padding: 11px 12px
+            padding: 11px 12px;
+            transition: border-color .15s ease, box-shadow .15s ease;
         }
 
         input {
-            height: 42px
+            height: 42px;
         }
 
         textarea {
             min-height: 310px;
             resize: vertical;
             line-height: 1.55;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         }
 
         input:focus,
         textarea:focus {
-            border-color: #686b76
+            border-color: #686b76;
+            box-shadow: 0 0 0 2px rgb(104 107 118 / 15%);
         }
 
         .preview {
             min-height: 420px;
             display: flex;
-            flex-direction: column
+            flex-direction: column;
         }
 
         .telegram {
-            max-width: 620px;
             width: 100%;
+            max-width: 620px;
             margin: auto;
             padding: 18px;
             border-radius: 10px;
             background: #202124;
             line-height: 1.5;
             overflow-wrap: anywhere;
-            white-space: pre-wrap;
         }
 
         .telegram .source {
-            color: #a8a9af
+            color: #a8a9af;
         }
 
         .telegram blockquote {
@@ -114,76 +134,112 @@
             padding: 8px 12px;
             border-left: 3px solid #666;
             color: #d5d5d8;
-            white-space: pre-wrap;
         }
 
         .telegram a {
             color: #6bb6ff;
-            text-decoration: none
+            text-decoration: none;
         }
 
-        .telegram br {
-            display: block;
-            content: "";
-            margin: 0;
+        .telegram ul,
+        .telegram ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+
+        .telegram p {
+            margin: 0 0 8px;
+        }
+
+        .telegram p:last-child {
+            margin-bottom: 0;
+        }
+
+        .telegram pre {
+            margin: 8px 0;
+            padding: 8px 10px;
+            overflow-x: auto;
+            border-radius: 6px;
+            background: #111216;
+        }
+
+        .telegram code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         }
 
         .actions {
             margin-top: 16px;
             display: flex;
-            gap: 8px
+            gap: 8px;
         }
 
         button {
-            border: 0;
             border-radius: 8px;
             padding: 11px 16px;
             background: #e8e8ea;
             color: #111214;
             font-weight: 700;
-            cursor: pointer
+            transition: opacity .15s ease, transform .05s ease;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            cursor: default;
+            opacity: .55;
         }
 
         button.secondary {
             background: #2a2c32;
-            color: #eee
+            color: #eee;
         }
 
         .hint {
             margin-top: 7px;
             color: #74767e;
-            font-size: 12px
+            font-size: 12px;
         }
 
-        @media(max-width:800px) {
+        @media (max-width: 800px) {
+            .app {
+                width: min(100% - 20px, 700px);
+                margin: 20px auto;
+            }
+
             .layout {
-                grid-template-columns: 1fr
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="app">
+    <main class="app">
         <h1>WuWa Post Formatter</h1>
 
         <div class="layout">
             <section class="panel">
                 <div class="field">
                     <label for="title">Заголовок</label>
-                    <input id="title" value="Заголовок">
+                    <input id="title" autocomplete="off" value="Заголовок">
                 </div>
 
                 <div class="field">
                     <label for="source">Источник</label>
-                    <input id="source" value="Источник">
+                    <input id="source" autocomplete="off" value="Источник">
                 </div>
 
                 <div class="field">
                     <label for="body">Текст поста</label>
-                    <textarea id="body" value="Текст поста">Текст поста</textarea>
+                    <textarea id="body" spellcheck="false">Текст поста</textarea>
                     <div class="hint">
-                        Используйте Markdown: **жирный**, *курсив*
+                        Markdown: **жирный**, *курсив*, [ссылка](https://example.com), списки
                     </div>
                 </div>
             </section>
@@ -193,164 +249,212 @@
                 <div id="preview" class="telegram"></div>
 
                 <div class="actions">
-                    <button id="copy">Копировать</button>
-                    <button id="clear" class="secondary">Очистить</button>
+                    <button id="copy" type="button">Копировать</button>
+                    <button id="clear" class="secondary" type="button">Очистить</button>
                 </div>
             </section>
         </div>
-    </div>
+    </main>
 
     <script>
+        "use strict";
 
-        function isMobileDevice() {
-            const ua = navigator.userAgent.toLowerCase();
-            return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+        const elements = {
+            title: document.getElementById("title"),
+            source: document.getElementById("source"),
+            body: document.getElementById("body"),
+            preview: document.getElementById("preview"),
+            copy: document.getElementById("copy"),
+            clear: document.getElementById("clear"),
+        };
+
+        const WATERMARK_HTML = '<br><b>// <a href="https://t.me/RumorsWuWa">@RumorsWuWa</a> //</b>';
+        const WATERMARK_COPY_HTML = "<br><b>// @RumorsWuWa //</b>";
+
+        // Telegram Web App доступен только внутри Telegram.
+        window.Telegram?.WebApp?.ready();
+
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+        });
+
+        function escapeHtml(value) {
+            return value
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;");
         }
 
-        let tg = window.Telegram.WebApp;
-        if (tg) {
-            tg.ready();
+        /**
+         * Преобразует HTML, созданный marked, в ограниченный HTML,
+         * пригодный для вставки в Telegram.
+         *
+         * Важный момент: здесь используется DOM, а не цепочка regex.
+         * Regex плохо подходит для вложенного HTML и легко ломает
+         * списки, ссылки и многоуровневые элементы.
+         */
+        function markdownToTelegramHtml(markdown) {
+            const root = document.createElement("div");
+            root.innerHTML = marked.parse(markdown);
+
+            sanitizeTelegramDom(root);
+
+            return root.innerHTML
+                .replace(/<p>\s*<\/p>/gi, "")
+                .replace(/\s*<br>\s*/gi, "<br>");
         }
 
-        const title = document.getElementById("title");
-        const source = document.getElementById("source");
-        const body = document.getElementById("body");
-        const preview = document.getElementById("preview");
+        function sanitizeTelegramDom(root) {
+            const allowedTags = new Set([
+                "A", "B", "STRONG", "I", "EM", "U", "S", "DEL",
+                "CODE", "PRE", "BLOCKQUOTE", "UL", "OL", "LI", "BR"
+            ]);
 
-        marked.setOptions({ breaks: true, gfm: true });
+            for (const node of [...root.querySelectorAll("*")]) {
+                if (!allowedTags.has(node.tagName)) {
+                    node.replaceWith(...node.childNodes);
+                    continue;
+                }
 
-        function escapeHtml(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;");
+                // Оставляем только безопасные атрибуты.
+                for (const attribute of [...node.attributes]) {
+                    if (node.tagName !== "A" || attribute.name !== "href") {
+                        node.removeAttribute(attribute.name);
+                    }
+                }
+
+                if (node.tagName === "A") {
+                    const href = node.getAttribute("href") || "";
+
+                    if (!isSafeUrl(href)) {
+                        node.replaceWith(...node.childNodes);
+                    } else {
+                        node.setAttribute("href", href);
+                    }
+                }
+            }
         }
 
-        // --- Функция для правильного сохранения переносов строк ---
-        function markdownToHtml(markdown) {
-            return marked.parse(markdown)
-                .replace(/<h1>(.*?)<\/h1>/gis, "<b>$1</b>")
-                .replace(/<h2>(.*?)<\/h2>/gis, "<b>$1</b>")
-                .replace(/<h3>(.*?)<\/h3>/gis, "<b>$1</b>")
-                .replace(/<p>(.*?)<\/p>/gis, "$1\n")
-                .replace(/<br\s*\/?>/gi, "\n")
-                .replace(/<ul>/gi, "")
-                .replace(/<\/ul>/gi, "")
-                .replace(/<ol>/gi, "")
-                .replace(/<\/ol>/gi, "")
-                .replace(/<li>(.*?)<\/li>/gis, "• $1\n")
-                .replace(/<blockquote>\s*<p>(.*?)<\/p>\s*<\/blockquote>/gis, "<blockquote>$1</blockquote>")
-                .trim();
+        function isSafeUrl(url) {
+            try {
+                const parsed = new URL(url, window.location.href);
+
+                return (
+                    parsed.protocol === "https:" ||
+                    parsed.protocol === "http:" ||
+                    parsed.protocol === "tg:"
+                );
+            } catch {
+                return false;
+            }
         }
 
-        // --- Сборка HTML для предпросмотра ---
+        function getValues() {
+            return {
+                title: elements.title.value.trim(),
+                source: elements.source.value.trim(),
+                body: elements.body.value.trim(),
+            };
+        }
+
+        function buildPostHtml({ title, source, body }, watermark = WATERMARK_HTML) {
+            const parts = [];
+
+            if (title) {
+                parts.push(`<b>${escapeHtml(title)}</b><br>`);
+            }
+
+            if (source) {
+                parts.push(`<i>Источник: ${escapeHtml(source)}</i><br>`);
+            }
+
+            if (body) {
+                parts.push(`${title || source ? "<br>" : ""}<blockquote>${markdownToTelegramHtml(body)}</blockquote>`);
+            }
+
+            if (watermark && parts.length) {
+                parts.push(watermark);
+            }
+
+            return parts.join("");
+        }
+
         function buildPreviewHtml() {
-            const t = title.value.trim();
-            const s = source.value.trim();
-            const b = body.value.trim();
-
-            const parts = [];
-
-            if (t) parts.push(`<b>${escapeHtml(t)}</b>`);
-            parts.push('\n');
-            if (s) parts.push(`<i>Источник: ${escapeHtml(s)}</i>`);
-            parts.push('\n');
-            if (b) {
-                const bodyHtml = markdownToHtml(b);
-                parts.push(`<blockquote>${bodyHtml}</blockquote>`);
-            }
-            parts.push('\n');
-            if (parts.length)
-                parts.push('<b>// <a href="https://t.me/RumorsWuWa">@RumorsWuWa</a> //</b>');
-
-            return parts.join(" ");
+            return buildPostHtml(getValues());
         }
 
-        // --- Сборка HTML для копирования (с правильными переносами) ---
         function buildCopyHtml() {
-            const t = title.value.trim();
-            const s = source.value.trim();
-            const b = body.value.trim();
+            return buildPostHtml(getValues(), WATERMARK_COPY_HTML);
+        }
 
-            const parts = [];
+        function htmlToPlainText(html) {
+            const root = document.createElement("div");
+            root.innerHTML = html;
 
-            // Заголовок (жирный)
-            if (t) parts.push(`<b>${escapeHtml(t)}</b>`);
-            parts.push('\n');
-            // Источник (курсив) — сразу после заголовка
-            if (s) parts.push(`<i>Источник: ${escapeHtml(s)}</i>`);
-            parts.push('\n\n');
-            // Текст поста (цитата) — с двумя переносами перед ним
-            if (b) {
-                // Добавляем пустую строку перед текстом поста
-
-                const bodyHtml = markdownToHtml(b);
-                parts.push(`<blockquote>${bodyHtml}</blockquote>`);
-            }
-            parts.push('\n');
-            // Watermark (жирный) — с двумя переносами перед ним
-            if (parts.length > 0) {
-                parts.push('');
-                parts.push('<b>// @RumorsWuWa //</b>');
-            }
-
-            // Соединяем с переносами
-            let result = parts.join(' ');
-
-            // Убираем лишние переносы в начале и конце
-            // result = result.replace(/^\n+|\n+$/g, '');
-
-            // Заменяем \n на <br> для Telegram
-            result = result.replace(/\n/g, '<br>');
-
-            return result;
+            // innerText лучше textContent сохраняет визуальные переносы.
+            return root.innerText.trim();
         }
 
         function render() {
-            preview.innerHTML = buildPreviewHtml();
+            elements.preview.innerHTML = buildPreviewHtml();
         }
 
-        [title, source, body].forEach(el => el.addEventListener("input", render));
-
-        // --- Копирование ---
-        document.getElementById("copy").addEventListener("click", async () => {
+        async function copyPost() {
             const html = buildCopyHtml();
 
-            if (!html.trim()) {
-                alert('Нет текста для копирования. Заполните хотя бы заголовок.');
+            if (!html) {
+                alert("Нет текста для копирования. Заполните хотя бы заголовок.");
                 return;
             }
 
-            // Получаем plain text для fallback
-            const temp = document.createElement('div');
-            temp.innerHTML = html;
-            const plain = temp.textContent;
+            const plain = htmlToPlainText(html);
 
             try {
-                // Копируем HTML и plain text
+                if (!navigator.clipboard?.write) {
+                    throw new Error("Rich clipboard API is unavailable");
+                }
+
                 await navigator.clipboard.write([
                     new ClipboardItem({
                         "text/html": new Blob([html], { type: "text/html" }),
-                        "text/plain": new Blob([plain], { type: "text/plain" })
-                    })
+                        "text/plain": new Blob([plain], { type: "text/plain" }),
+                    }),
                 ]);
             } catch {
-                // Fallback: копируем plain text
-                await navigator.clipboard.writeText(plain);
+                try {
+                    await navigator.clipboard.writeText(plain);
+                } catch {
+                    alert("Не удалось скопировать текст. Проверьте разрешение браузера на доступ к буферу обмена.");
+                    return;
+                }
             }
 
-            const button = document.getElementById("copy");
-            const old = button.textContent;
-            button.textContent = "Скопировано ✓";
-            setTimeout(() => button.textContent = old, 1200);
-        });
+            const oldText = elements.copy.textContent;
+            elements.copy.disabled = true;
+            elements.copy.textContent = "Скопировано ✓";
 
-        document.getElementById("clear").addEventListener("click", () => {
-            title.value = "";
-            source.value = "";
-            body.value = "";
+            setTimeout(() => {
+                elements.copy.disabled = false;
+                elements.copy.textContent = oldText;
+            }, 1200);
+        }
+
+        function clearForm() {
+            elements.title.value = "";
+            elements.source.value = "";
+            elements.body.value = "";
             render();
-        });
+        }
+
+        elements.title.addEventListener("input", render);
+        elements.source.addEventListener("input", render);
+        elements.body.addEventListener("input", render);
+
+        elements.copy.addEventListener("click", copyPost);
+        elements.clear.addEventListener("click", clearForm);
 
         render();
     </script>
