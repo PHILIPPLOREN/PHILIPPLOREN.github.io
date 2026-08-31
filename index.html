@@ -1,49 +1,354 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini App</title>
-    
-    <!-- Telegram Web App SDK -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <link rel="stylesheet" href="style.css">
+    <title>WuWa Post Formatter</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #111214;
+            color: #e8e8ea;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+        }
+
+        .app {
+            width: min(1100px, calc(100% - 32px));
+            margin: 32px auto
+        }
+
+        h1 {
+            margin: 0 0 20px;
+            font-size: 26px
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px
+        }
+
+        .panel {
+            background: #191a1e;
+            border: 1px solid #292b31;
+            border-radius: 12px;
+            padding: 18px
+        }
+
+        .field {
+            margin-bottom: 14px
+        }
+
+        .field:last-child {
+            margin-bottom: 0
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            color: #a8a9af;
+            font-size: 13px;
+            font-weight: 600
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            border: 1px solid #303239;
+            border-radius: 8px;
+            outline: none;
+            background: #111216;
+            color: #eee;
+            font: inherit;
+            padding: 11px 12px
+        }
+
+        input {
+            height: 42px
+        }
+
+        textarea {
+            min-height: 310px;
+            resize: vertical;
+            line-height: 1.55;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #686b76
+        }
+
+        .preview {
+            min-height: 420px;
+            display: flex;
+            flex-direction: column
+        }
+
+        .telegram {
+            max-width: 620px;
+            width: 100%;
+            margin: auto;
+            padding: 18px;
+            border-radius: 10px;
+            background: #202124;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .telegram .source {
+            color: #a8a9af
+        }
+
+        .telegram blockquote {
+            margin: 14px 0;
+            padding: 8px 12px;
+            border-left: 3px solid #666;
+            color: #d5d5d8;
+            white-space: pre-wrap;
+        }
+
+        .telegram a {
+            color: #6bb6ff;
+            text-decoration: none
+        }
+
+        .telegram br {
+            display: block;
+            content: "";
+            margin: 0;
+        }
+
+        .actions {
+            margin-top: 16px;
+            display: flex;
+            gap: 8px
+        }
+
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 11px 16px;
+            background: #e8e8ea;
+            color: #111214;
+            font-weight: 700;
+            cursor: pointer
+        }
+
+        button.secondary {
+            background: #2a2c32;
+            color: #eee
+        }
+
+        .hint {
+            margin-top: 7px;
+            color: #74767e;
+            font-size: 12px
+        }
+
+        @media(max-width:800px) {
+            .layout {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>📝 Создать карточку</h1>
-        
-        <form id="cardForm">
-            <div class="form-group">
-                <label for="title">Заголовок</label>
-                <input type="text" id="title" placeholder="Введите заголовок" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="source">Источник (необязательно)</label>
-                <input type="text" id="source" placeholder="Введите источник">
-                <small class="hint">Если оставить пустым, строка с источником не будет добавлена</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="description">Описание</label>
-                <textarea id="description" rows="4" placeholder="Введите описание" required></textarea>
-            </div>
-            
-            <button type="submit" class="btn-primary">Создать карточку</button>
-        </form>
-        
-        <div id="result" class="result hidden">
-            <h2>📄 Готовый форматированный текст</h2>
-            <div id="formattedText" class="formatted-text"></div>
-            <div class="button-group">
-                <button id="copyBtn" class="btn-secondary">📋 Копировать HTML</button>
-                <button id="copyPlainBtn" class="btn-secondary">📋 Копировать как текст</button>
-            </div>
+    <div class="app">
+        <h1>WuWa Post Formatter</h1>
+
+        <div class="layout">
+            <section class="panel">
+                <div class="field">
+                    <label for="title">Заголовок</label>
+                    <input id="title" value="Заголовок">
+                </div>
+
+                <div class="field">
+                    <label for="source">Источник</label>
+                    <input id="source" value="Источник">
+                </div>
+
+                <div class="field">
+                    <label for="body">Текст поста</label>
+                    <textarea id="body" value="Текст поста">Текст поста</textarea>
+                    <div class="hint">
+                        Используйте Markdown: **жирный**, *курсив*
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel preview">
+                <label>Предпросмотр</label>
+                <div id="preview" class="telegram"></div>
+
+                <div class="actions">
+                    <button id="copy">Копировать</button>
+                    <button id="clear" class="secondary">Очистить</button>
+                </div>
+            </section>
         </div>
     </div>
-    
-    <script src="script.js"></script>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+
+        let tg = window.Telegram.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        const title = document.getElementById("title");
+        const source = document.getElementById("source");
+        const body = document.getElementById("body");
+        const preview = document.getElementById("preview");
+
+        marked.setOptions({ breaks: true, gfm: true });
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
+
+        // --- Функция для правильного сохранения переносов строк ---
+        function markdownToHtml(markdown) {
+            return marked.parse(markdown)
+                .replace(/<h1>(.*?)<\/h1>/gis, "<b>$1</b>")
+                .replace(/<h2>(.*?)<\/h2>/gis, "<b>$1</b>")
+                .replace(/<h3>(.*?)<\/h3>/gis, "<b>$1</b>")
+                .replace(/<p>(.*?)<\/p>/gis, "$1\n")
+                .replace(/<br\s*\/?>/gi, "\n")
+                .replace(/<ul>/gi, "")
+                .replace(/<\/ul>/gi, "")
+                .replace(/<ol>/gi, "")
+                .replace(/<\/ol>/gi, "")
+                .replace(/<li>(.*?)<\/li>/gis, "• $1\n")
+                .replace(/<blockquote>\s*<p>(.*?)<\/p>\s*<\/blockquote>/gis, "<blockquote>$1</blockquote>")
+                .trim();
+        }
+
+        // --- Сборка HTML для предпросмотра ---
+        function buildPreviewHtml() {
+            const t = title.value.trim();
+            const s = source.value.trim();
+            const b = body.value.trim();
+
+            const parts = [];
+
+            if (t) parts.push(`<b>${escapeHtml(t)}</b>\n`);
+            if (s) parts.push(`<i>Источник: ${escapeHtml(s)}</i>\n`);
+
+            if (b) {
+                const bodyHtml = markdownToHtml(b);
+                parts.push(`${t || s ? "\n" : ""}<blockquote>${bodyHtml}</blockquote>`);
+            }
+
+            if (parts.length)
+                parts.push('\n<b>// <a href="https://t.me/RumorsWuWa">@RumorsWuWa</a> //</b>');
+
+            return parts.join("");
+        }
+
+        // --- Сборка HTML для копирования (с правильными переносами) ---
+        function buildCopyHtml() {
+            const t = title.value.trim();
+            const s = source.value.trim();
+            const b = body.value.trim();
+
+            const parts = [];
+
+            // Заголовок (жирный)
+            if (t) parts.push(`<b>${escapeHtml(t)}</b>\n`);
+
+            // Источник (курсив) — сразу после заголовка
+            if (s) parts.push(`<i>Источник: ${escapeHtml(s)}</i>\n`);
+
+            // Текст поста (цитата) — с двумя переносами перед ним
+            if (b) {
+                // Добавляем пустую строку перед текстом поста
+
+                const bodyHtml = markdownToHtml(b);
+                parts.push(`${t || s ? "\n" : ""}<blockquote>${bodyHtml}</blockquote>`);
+            }
+
+            // Watermark (жирный) — с двумя переносами перед ним
+            if (parts.length > 0) {
+                parts.push('');
+                parts.push('\n<b>// @RumorsWuWa //</b>');
+            }
+
+            // Соединяем с переносами
+            let result = parts.join('');
+
+            // Убираем лишние переносы в начале и конце
+            result = result.replace(/^\n+|\n+$/g, '');
+
+            // Заменяем \n на <br> для Telegram
+            result = result.replace(/\n/g, '<br>');
+
+            return result;
+        }
+
+        function render() {
+            preview.innerHTML = buildPreviewHtml();
+        }
+
+        [title, source, body].forEach(el => el.addEventListener("input", render));
+
+        // --- Копирование ---
+        document.getElementById("copy").addEventListener("click", async () => {
+            const html = buildCopyHtml();
+
+            if (!html.trim()) {
+                alert('Нет текста для копирования. Заполните хотя бы заголовок.');
+                return;
+            }
+
+            // Получаем plain text для fallback
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            const plain = temp.textContent;
+
+            try {
+                // Копируем HTML и plain text
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        "text/html": new Blob([html], { type: "text/html" }),
+                        "text/plain": new Blob([plain], { type: "text/plain" })
+                    })
+                ]);
+            } catch {
+                // Fallback: копируем plain text
+                await navigator.clipboard.writeText(plain);
+            }
+
+            const button = document.getElementById("copy");
+            const old = button.textContent;
+            button.textContent = "Скопировано ✓";
+            setTimeout(() => button.textContent = old, 1200);
+        });
+
+        document.getElementById("clear").addEventListener("click", () => {
+            title.value = "";
+            source.value = "";
+            body.value = "";
+            render();
+        });
+
+        render();
+    </script>
 </body>
+
 </html>
