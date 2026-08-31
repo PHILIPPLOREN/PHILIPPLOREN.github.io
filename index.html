@@ -360,6 +360,10 @@
             };
         }
 
+        function isUserAgentMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
         function buildPostHtml({ title, source, body }, watermark = WATERMARK_HTML) {
             const parts = [];
 
@@ -372,7 +376,7 @@
             }
 
             if (body) {
-                parts.push(`${title || source ? "<br>" : ""}<blockquote>${markdownToTelegramHtml(body)}</blockquote>`);
+                parts.push(`${title || source ? "<br>" : ""}<blockquote>${markdownToTelegramHtml(body)}</blockquote>${isUserAgentMobile() ? "<br>" : ""}`);
             }
 
             if (watermark && parts.length) {
