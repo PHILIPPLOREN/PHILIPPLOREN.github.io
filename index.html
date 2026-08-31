@@ -251,18 +251,19 @@
 
             const parts = [];
 
-            if (t) parts.push(`<b>${escapeHtml(t)}</b>\n`);
-            if (s) parts.push(`<i>Источник: ${escapeHtml(s)}</i>\n`);
-
+            if (t) parts.push(`<b>${escapeHtml(t)}</b>`);
+            parts.push('\n');
+            if (s) parts.push(`<i>Источник: ${escapeHtml(s)}</i>`);
+            parts.push('\n');
             if (b) {
                 const bodyHtml = markdownToHtml(b);
-                parts.push(`${t || s ? "\n" : ""}<blockquote>${bodyHtml}</blockquote>`);
+                parts.push(`<blockquote>${bodyHtml}</blockquote>`);
             }
-
+            parts.push('\n');
             if (parts.length)
-                parts.push('\n<b>// <a href="https://t.me/RumorsWuWa">@RumorsWuWa</a> //</b>');
+                parts.push('<b>// <a href="https://t.me/RumorsWuWa">@RumorsWuWa</a> //</b>');
 
-            return parts.join("");
+            return parts.join(" ");
         }
 
         // --- Сборка HTML для копирования (с правильными переносами) ---
@@ -274,30 +275,30 @@
             const parts = [];
 
             // Заголовок (жирный)
-            if (t) parts.push(`<b>${escapeHtml(t)}</b>\n`);
-
+            if (t) parts.push(`<b>${escapeHtml(t)}</b>`);
+            parts.push('\n');
             // Источник (курсив) — сразу после заголовка
-            if (s) parts.push(`<i>Источник: ${escapeHtml(s)}</i>\n`);
-
+            if (s) parts.push(`<i>Источник: ${escapeHtml(s)}</i>`);
+            parts.push('\n\n');
             // Текст поста (цитата) — с двумя переносами перед ним
             if (b) {
                 // Добавляем пустую строку перед текстом поста
 
                 const bodyHtml = markdownToHtml(b);
-                parts.push(`${t || s ? "\n" : ""}<blockquote>${bodyHtml}</blockquote>${isMobileDevice() ? "\n" : ""}`);
+                parts.push(`<blockquote>${bodyHtml}</blockquote>`);
             }
-
+            parts.push('\n');
             // Watermark (жирный) — с двумя переносами перед ним
             if (parts.length > 0) {
                 parts.push('');
-                parts.push('\n<b>// @RumorsWuWa //</b>');
+                parts.push('<b>// @RumorsWuWa //</b>');
             }
 
             // Соединяем с переносами
-            let result = parts.join('');
+            let result = parts.join(' ');
 
             // Убираем лишние переносы в начале и конце
-            result = result.replace(/^\n+|\n+$/g, '');
+            // result = result.replace(/^\n+|\n+$/g, '');
 
             // Заменяем \n на <br> для Telegram
             result = result.replace(/\n/g, '<br>');
