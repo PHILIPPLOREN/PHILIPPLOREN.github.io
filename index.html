@@ -202,6 +202,11 @@
 
     <script>
 
+        function isMobileDevice() {
+            const ua = navigator.userAgent.toLowerCase();
+            return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+        }
+
         let tg = window.Telegram.WebApp;
         if (tg) {
             tg.ready();
@@ -279,7 +284,7 @@
                 // Добавляем пустую строку перед текстом поста
 
                 const bodyHtml = markdownToHtml(b);
-                parts.push(`${t || s ? "\n" : ""}<blockquote>${bodyHtml}</blockquote>`);
+                parts.push(`${t || s ? "\n" : ""}<blockquote>${bodyHtml}</blockquote>${isMobileDevice() ? "\n" : ""}`);
             }
 
             // Watermark (жирный) — с двумя переносами перед ним
