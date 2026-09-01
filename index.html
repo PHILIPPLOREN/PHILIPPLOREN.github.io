@@ -206,6 +206,68 @@
             font-size: 12px;
         }
 
+        .checkbox-field {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-top: 2px;
+        }
+
+        .checkbox-field input {
+            width: 17px;
+            height: 17px;
+            margin: 0;
+            accent-color: #e8e8ea;
+            cursor: pointer;
+        }
+
+        .checkbox-field label {
+            margin: 0;
+            color: #e8e8ea;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .symbols {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid #292b31;
+        }
+
+        .symbols-title {
+            margin-bottom: 8px;
+            color: #a8a9af;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .symbol-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .symbol {
+            min-width: 38px;
+            padding: 7px 10px;
+            border: 1px solid #303239;
+            border-radius: 7px;
+            background: #111216;
+            color: #eee;
+            font-size: 15px;
+            line-height: 1;
+            font-weight: 400;
+        }
+
+        .symbol:hover {
+            border-color: #686b76;
+            opacity: 1;
+        }
+
+        .symbol.copied {
+            border-color: #686b76;
+        }
+
         @media (max-width: 800px) {
             .app {
                 width: min(100% - 20px, 700px);
@@ -235,11 +297,37 @@
                     <input id="source" autocomplete="off" value="Источник">
                 </div>
 
+                <div class="field checkbox-field">
+                    <input id="possibleChanges" type="checkbox">
+                    <label for="possibleChanges">Возможны изменения</label>
+                </div>
+
                 <div class="field">
                     <label for="body">Текст поста</label>
                     <textarea id="body" spellcheck="false">Текст поста</textarea>
                     <div class="hint">
                         Markdown: **жирный**, *курсив*, [текст ссылки](https://example.com), списки
+                    </div>
+                </div>
+
+                <div class="symbols">
+                    <div class="symbols-title">Вспомогательные символы — нажмите, чтобы скопировать</div>
+                    <div class="symbol-list">
+                        <button class="symbol" type="button" data-symbol="•" title="Жирная точка">•</button>
+                        <button class="symbol" type="button" data-symbol="▪" title="Маленький квадрат">▪</button>
+                        <button class="symbol" type="button" data-symbol="◦" title="Пустая точка">◦</button>
+                        <button class="symbol" type="button" data-symbol="—" title="Длинное тире">—</button>
+                        <button class="symbol" type="button" data-symbol="–" title="Среднее тире">–</button>
+                        <button class="symbol" type="button" data-symbol="→" title="Стрелка вправо">→</button>
+                        <button class="symbol" type="button" data-symbol="←" title="Стрелка влево">←</button>
+                        <button class="symbol" type="button" data-symbol="↑" title="Стрелка вверх">↑</button>
+                        <button class="symbol" type="button" data-symbol="↓" title="Стрелка вниз">↓</button>
+                        <button class="symbol" type="button" data-symbol="✓" title="Галочка">✓</button>
+                        <button class="symbol" type="button" data-symbol="✦" title="Звезда">✦</button>
+                        <button class="symbol" type="button" data-symbol="★" title="Звезда">★</button>
+                        <button class="symbol" type="button" data-symbol="⚠️" title="Предупреждение">⚠️</button>
+                        <button class="symbol" type="button" data-symbol="• " title="Жирная точка с пробелом">•
+                        </button>
                     </div>
                 </div>
             </section>
@@ -262,6 +350,7 @@
         const elements = {
             title: document.getElementById("title"),
             source: document.getElementById("source"),
+            possibleChanges: document.getElementById("possibleChanges"),
             body: document.getElementById("body"),
             preview: document.getElementById("preview"),
             copy: document.getElementById("copy"),
@@ -356,6 +445,7 @@
             return {
                 title: elements.title.value.trim(),
                 source: elements.source.value.trim(),
+                possibleChanges: elements.possibleChanges.checked,
                 body: elements.body.value.trim(),
             };
         }
@@ -364,7 +454,7 @@
             return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
-        function buildPostHtml({ title, source, body }, watermark = WATERMARK_HTML) {
+        function buildPostHtml({ title, source, possibleChanges, body }, watermark = WATERMARK_HTML) {
             const parts = [];
 
             if (title) {
@@ -373,6 +463,10 @@
 
             if (source) {
                 parts.push(`📚 <i>Источник: ${escapeHtml(source)}</i><br>`);
+            }
+
+            if (possibleChanges) {
+                parts.push(`⚠️ <i>Возможны изменения</i><br>`);
             }
 
             if (body) {
@@ -449,13 +543,37 @@
         function clearForm() {
             elements.title.value = "";
             elements.source.value = "";
+            elements.possibleChanges.checked = false;
             elements.body.value = "";
             render();
         }
 
         elements.title.addEventListener("input", render);
         elements.source.addEventListener("input", render);
+        elements.possibleChanges.addEventListener("change", render);
         elements.body.addEventListener("input", render);
+
+        document.querySelectorAll(".symbol").forEach((button) => {
+            button.addEventListener("click", async () => {
+                const symbol = button.dataset.symbol;
+
+                try {
+                    await navigator.clipboard.writeText(symbol);
+                } catch {
+                    const textarea = document.createElement("textarea");
+                    textarea.value = symbol;
+                    textarea.style.position = "fixed";
+                    textarea.style.opacity = "0";
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand("copy");
+                    textarea.remove();
+                }
+
+                button.classList.add("copied");
+                setTimeout(() => button.classList.remove("copied"), 500);
+            });
+        });
 
         elements.copy.addEventListener("click", copyPost);
         elements.clear.addEventListener("click", clearForm);
