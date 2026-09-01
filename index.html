@@ -364,7 +364,6 @@
         // Telegram Web App доступен только внутри Telegram.
         let tg = window.Telegram.WebApp;
         tg.ready();
-        tg.requestFullscreen();
 
         if (!isMobile()) {
             tg.lockOrientation("landscape");
