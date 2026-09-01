@@ -96,7 +96,7 @@
         }
 
         textarea {
-            min-height: 310px;
+            min-height: 64px;
             resize: vertical;
             line-height: 1.55;
             font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -357,22 +357,10 @@
         const WATERMARK_HTML = '<br><b>// <a href="https://t.me/RumorsWuWa">@RumorsWuWa</a> //</b>';
         const WATERMARK_COPY_HTML = "<br><b>// @RumorsWuWa //</b>";
 
-        function isMobile() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent);
-        }
-
         // Telegram Web App доступен только внутри Telegram.
         let tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-
-        if (!isMobile()) {
-            tg.lockOrientation("landscape");
-        }
-        else {
-            document.body.style.width = "70vw";
-            document.body.style.height = "70vh";
-        }
 
         marked.setOptions({
             breaks: true,
