@@ -364,9 +364,14 @@
         // Telegram Web App доступен только внутри Telegram.
         let tg = window.Telegram.WebApp;
         tg.ready();
+        tg.expand();
 
         if (!isMobile()) {
             tg.lockOrientation("landscape");
+        }
+        else {
+            document.body.style.width = "70vw";
+            document.body.style.height = "70vh";
         }
 
         marked.setOptions({
