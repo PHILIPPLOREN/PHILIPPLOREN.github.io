@@ -357,8 +357,18 @@
         const WATERMARK_HTML = '<br><b>// <a href="https://t.me/RumorsWuWa">@RumorsWuWa</a> //</b>';
         const WATERMARK_COPY_HTML = "<br><b>// @RumorsWuWa //</b>";
 
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|BB|PlayBook|IEMobile|Windows Phone|Kindle|Silk|Opera Mini/i.test(navigator.userAgent);
+        }
+
         // Telegram Web App доступен только внутри Telegram.
-        window.Telegram?.WebApp?.ready();
+        let tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.requestFullscreen();
+
+        if (!isMobile()) {
+            tg.lockOrientation("landscape");
+        }
 
         marked.setOptions({
             breaks: true,
