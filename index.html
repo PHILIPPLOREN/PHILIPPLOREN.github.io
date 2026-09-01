@@ -311,10 +311,9 @@
                 </div>
 
                 <div class="symbols">
-                    <div class="symbols-title">Вспомогательные символы — нажмите, чтобы скопировать</div>
+                    <div class="symbols-title">Вспомогательные символы — нажмите, чтобы вставить и скопировать</div>
                     <div class="symbol-list">
                         <button class="symbol" type="button" data-symbol="•" title="Жирная точка">•</button>
-                        <button class="symbol" type="button" data-symbol="▪" title="Маленький квадрат">▪</button>
                         <button class="symbol" type="button" data-symbol="◦" title="Пустая точка">◦</button>
                         <button class="symbol" type="button" data-symbol="—" title="Длинное тире">—</button>
                         <button class="symbol" type="button" data-symbol="–" title="Среднее тире">–</button>
@@ -326,8 +325,6 @@
                         <button class="symbol" type="button" data-symbol="✦" title="Звезда">✦</button>
                         <button class="symbol" type="button" data-symbol="★" title="Звезда">★</button>
                         <button class="symbol" type="button" data-symbol="⚠️" title="Предупреждение">⚠️</button>
-                        <button class="symbol" type="button" data-symbol="• " title="Жирная точка с пробелом">•
-                        </button>
                     </div>
                 </div>
             </section>
@@ -554,21 +551,38 @@
         elements.body.addEventListener("input", render);
 
         document.querySelectorAll(".symbol").forEach((button) => {
+            button.addEventListener("mousedown", (event) => {
+                // Не даём кнопке забрать фокус у textarea до обработки клика.
+                event.preventDefault();
+            });
+
             button.addEventListener("click", async () => {
                 const symbol = button.dataset.symbol;
+                const textarea = elements.body;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
 
+                // Вставляем символ в сохранённую позицию курсора
+                // или заменяем им выделенный текст.
+                textarea.setRangeText(symbol, start, end, "end");
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = start + symbol.length;
+
+                // Одновременно копируем символ в буфер обмена.
                 try {
                     await navigator.clipboard.writeText(symbol);
                 } catch {
-                    const textarea = document.createElement("textarea");
-                    textarea.value = symbol;
-                    textarea.style.position = "fixed";
-                    textarea.style.opacity = "0";
-                    document.body.appendChild(textarea);
-                    textarea.select();
+                    const fallback = document.createElement("textarea");
+                    fallback.value = symbol;
+                    fallback.style.position = "fixed";
+                    fallback.style.opacity = "0";
+                    document.body.appendChild(fallback);
+                    fallback.select();
                     document.execCommand("copy");
-                    textarea.remove();
+                    fallback.remove();
                 }
+
+                render();
 
                 button.classList.add("copied");
                 setTimeout(() => button.classList.remove("copied"), 500);
